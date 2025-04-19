@@ -1,0 +1,525 @@
+\chapter{Theoretical background}
+This section outlines the principles and components of indoor positioning systems, including common measurement and positioning methods. Here, we discuss the technical foundations of wireless technologies used in IPS, focusing on UWB, describing its signal structure, modulation schemes, and ranging mechanisms. The section also identifies key error sources in UWB systems, such as NLoS propagation, setting the stage for the mitigation strategies proposed in the following chapters.
+
+\section{IPS overview}
+Indoor positioning systems (IPS) are used to determine the location of the target within the indoor space. The majority of the IPS use wireless technologies, including Bluetooth Low Energy (BLE), WiFi, and Ultra-Wideband (UWB)~\cite{singh2024systematic}. 
+
+\begin{figure}[tbh]
+\includegraphics[width=0.75\textwidth]{Graphics/ips_topology.pdf}
+\centering
+\caption{Illustration of typical IPS topology.}
+\label{fig:typical_topology}
+\end{figure}
+
+A typical IPS topology, illustrated in \autoref{fig:typical_topology}, often includes multiple wireless transceiver devices that communicate with one another to perform various measurements. These devices are commonly referred to as anchors and tags. Anchors are fixed devices with known, predefined locations, while tags are mobile devices (targets) whose positions are to be estimated. IPS setups usually include a central processing unit or localization engine that gathers measurement data and applies localization algorithms to infer the position of the tag.
+
+\subsection{Measuring methods}
+Wireless technologies can employ a number of measurement methods to infer the distance or direction to the anchor devices. These measurements, or their combinations, can be later used to infer the position of the tag. The principal methods are~\cite{mazhar2017precise}:
+
+\begin{enumerate}
+    \item \textbf{Phase of Arrival (PoA)}: Phase-based methods rely on the dependence between phase shift of the received signal and the distance it traveled in order to determine the range between transceivers:
+    \begin{equation}
+        \phi(f, x) = \frac{2\pi}{c}fx\,(\bmod\,2\pi),
+    \end{equation}
+    where $x$ is the distance, $f$ is the signal carrier frequency, and $c$ is the speed of light. For a known carrier frequency $f$ of the signal, the distance $x$ can be trivially inferred from the signal's phase shift $\phi$. To mitigate the effect of phase-wrapping, the received signal phase can be evaluated on multiple carrier frequencies, decreasing the ranging ambiguity. 
+    
+    \item \textbf{Angle of Arrival (AoA)}: AoA represents the direction from which a signal arrives at the receiver, and relies on measuring the phase or time difference of a signal arriving at multiple elements of an antenna array. The difference in arrival time $\Delta t$ and corresponding phase difference $\Delta \phi$ between two adjacent antennas, caused by a signal incident at an angle $\theta$, are given by:
+    
+    \begin{equation} 
+    \Delta t = \frac{d \sin \theta}{c}, \qquad \Delta \phi = \frac{2\pi d \sin \theta}{\lambda}, 
+    \end{equation}
+    
+    where $d$ is the antenna spacing, $c$ is the speed of light, and $\lambda$ is the signal wavelength. For known system parameters, these expressions allow the incident angle $\theta$ to be inferred from either time or phase measurements.
+    
+    \item \textbf{Received Signal Strength (RSS)}: RSS-bsed methods determine distance by analyzing the attenuation of the transmitted signal as it propagates through space. RSS relies on the path loss model, which describes how the power of a  signal decreases with distance. The power $P_r$ at a receiver located at a distance $d$ from a transmitter is given by:
+    
+    \begin{equation}
+    P_r(d) = P_t - PL(d),
+    \end{equation}
+    where: $P_r(d)$ is the received power at distance $d$ (in dBm), $P_t$ is the transmitted power (in dBm), and $PL(d)$ is the path loss model (in dB). The path loss is often expressed as:
+    \begin{equation}
+    PL(d) = PL(d_0) + 10 \gamma \log_{10} \left( \frac{d}{d_0} \right) + X_{\sigma},
+    \end{equation}
+    where: $PL(d_0)$ is the reference path loss at a known reference distance $d_0$ (typically 1 meter), $\gamma$ is the path loss exponent, which depends on the environment, and $X_{\sigma}$ is a zero-mean Gaussian random variable representing shadowing effects.
+    
+    \item \textbf{Time-of-Arrival (ToA)}: ToA is a fundamental concept used in UWB systems to determine the Time-of-Flight of a signal. ToF is directly proportional to the distance between the transmitter and receiver:
+    
+    \begin{equation}
+    d = c \cdot T_{\text{ToF}},
+    \end{equation}
+    where: $c$ is the speed of light, and $T_{\text{ToF}}$ is the measured time of flight.
+    
+    Sometimes this method is also referred to as Round-Trip-Time (RTT), which is double of ToF.
+\end{enumerate}
+
+\subsection{Positioning methods}
+Once the distance or angle estimates are obtained using the methods described above, they can be used to compute the position of a target device using various localization techniques. These techniques include, but are not limited to: lateration, angulation, fingerprinting, and estimation filtering methods~\cite{qi2024current}.
+
+\paragraph{Lateration and angulation nethods}
+Lateration is used to determine the position of an unknown target based on distance measurements from multiple reference points (anchors). Angulation methods determine the position of the target using measured angles from at least two reference points.
+The primary methods include trilateration, triangulation, and Time Difference of Arrival (TDoA).
+
+\begin{enumerate}
+    \item \textbf{Trilateration}
+    Trilateration is a technique where the position of a target is estimated based on its measured distances from at least three known anchors in a 2D plane (or four anchors in 3D space). For each anchor $i$, the relationship between the known anchor position $(x_i, y_i)$ and the unknown target position $(x, y)$ is given by:
+    
+    \begin{equation}
+    d_i = \sqrt{(x - x_i)^2 + (y - y_i)^2}
+    \end{equation}
+    
+    where $d_i$ is the measured distance from the target to anchor $i$, and $(x_i, y_i)$ is the known position of the anchor. This results in a system of nonlinear equations, which can be solved using numerical methods such as least squares minimization.
+
+    \item \textbf{Triangulation}
+    Using known anchor positions and measured AoAs, the target position is obtained by solving the intersection of bearing lines. For two anchors at $(x_1, y_1)$ and $(x_2, y_2)$, the target’s coordinates are determined using:
+    
+    \begin{align}
+    x &= x_i + d_i \cos \theta_i, \\
+    y &= y_i + d_i \sin \theta_i,
+    \end{align}
+    
+    where $\theta_i$ is the measured AoA at anchor $i$. With multiple AoA measurements, least squares estimation is typically used to obtain a position estimate.
+
+    \item \textbf{Time Difference of Arrival (TDoA)}
+    TDoA is a multilateration technique that relies on measuring the difference in signal arrival times at multiple spatially separated anchor nodes, rather than absolute arrival times. For two anchors located at $(x_1, y_1)$ and $(x_2, y_2)$, the corresponding range difference is given by:
+
+    \begin{equation} 
+    d_1 - d_2 = c \cdot (T_{\text{ToA}1} - T_{\text{ToA}_2}), 
+    \end{equation}
+    
+    where $T_{\text{ToA}1}$ and $T{\text{ToA}_2}$ are the times of arrival of the signal at the two anchors, and $c$ denotes the speed of light. Each such measurement defines a hyperbolic constraint on the target's position. By combining measurements from at least three anchors, the position of the transmitting tag can be estimated by solving the resulting system of nonlinear equations. This method is widely used in UWB-based systems due to their high temporal resolution, which enables accurate time-based measurements.
+\end{enumerate}
+
+\paragraph{Fingerprinting}
+The majority of fingerprinting methods are RSS-based~\cite{alarifi2016ultra}. However, to overcome the non-deterministic nature of signal attenuation, these methods establish a mapping between RSS and target position, rather than relying on analytical distance estimation. RSS fingerprinting typically consists of two phases:
+\begin{enumerate}
+    \item Offline Phase: A database of RSS measurements at known locations is created.
+    \item Online Phase: The real-time RSS measurements are compared with the fingerprint database to estimate the most probable location.
+\end{enumerate}
+A common approach for position estimation is k-Nearest Neighbors (k-NN), where the estimated position is given by:
+
+\begin{equation}
+(x, y) = \frac{1}{k} \sum_{i=1}^{k} (x_i, y_i),
+\end{equation}
+
+where $(x_i, y_i)$ are the positions of the $k$ closest fingerprint database entries.
+
+\subsection{Filtering methods}\label{kalman_theory}
+In wireless systems, the measurement noise and multipath interference are unavoidable effects that can degrade localization accuracy. To address this, various filtering techniques are employed to improve the robustness of position estimates and enable sensor fusion, as discussed in \autoref{related_work}. Among the wide range of approaches, including particle filters for non-Gaussian systems~\cite{wang2014particle}, Kalman filters (KF) and their variants remain the most widely used due to their balance of computational efficiency and estimation accuracy.
+
+Kalman filters recursively estimate the state of a system by using prior knowledge to infer the current state of the target in a way that minimizes the error between the prediction and the actual state. Originally, KF was designed to work with linear-space states, considering that the measurement noise obeys a Gaussian distribution. However, there are versions of KF adapted to estimate states in nonlinear systems such as Extended Kalman filter (EKF) or Unscented Kalman filter (UKF)~\cite{wan2000unscented, konatowski2016comparison}.
+
+\paragraph{Standard Kalman Filter}
+
+The Kalman Filter is based on a discrete-time linear dynamic system~\cite{wiley_kalman}:
+\begin{align}
+    \mathbf{x}_k &= \mathbf{F}_{k} \mathbf{x}_{k-1} + \mathbf{w}_{k}, \quad \mathbf{w}_{k-1} \sim \mathcal{N}(0, \mathbf{Q}_{k-1}) \\
+    \mathbf{z}_k &= \mathbf{H}_k \mathbf{x}_k + \mathbf{v}_k, \quad \mathbf{v}_k \sim \mathcal{N}(0, \mathbf{R}_k)
+\end{align}
+where $\mathbf{x}_k$ is the system state vector, $\mathbf{z}_k$ is the measurement vector,  and $\mathbf{F}_k$, and $\mathbf{H}_k$ are the state transition and observation matrices, respectively. $\mathbf{w}_{k-1}$ and $\mathbf{v}_k$ are the process and measurement noise, modeled as zero-mean Gaussians with covariances $\mathbf{Q}_{k-1}$ and $\mathbf{R}_k$.
+
+At each time step, KF performs the following predict and update steps:
+
+\emph{Prediction:}
+\begin{align}
+    \hat{\mathbf{x}}_k^- &= \mathbf{F}_k \hat{\mathbf{x}}_{k-1} \\
+    \mathbf{P}_k^- &= \mathbf{F}_k \mathbf{P}_{k-1} \mathbf{F}_k^\top + \mathbf{Q}_{k-1}
+\end{align}
+
+\emph{Update:}
+\begin{align}
+    \mathbf{K}_k &= \mathbf{P}_k^- \mathbf{H}_k^\top \left( \mathbf{H}_k \mathbf{P}_k^- \mathbf{H}_k^\top + \mathbf{R}_k \right)^{-1} \\
+    \hat{\mathbf{x}}_k &= \hat{\mathbf{x}}_k^- + \mathbf{K}_k (\mathbf{z}_k - \mathbf{H}_k \hat{\mathbf{x}}_k^-) \\
+    \mathbf{P}_k &= (\mathbf{I} - \mathbf{K}_k \mathbf{H}_k) \mathbf{P}_k^-,
+\end{align}
+
+where $\mathbf{K}_k$ is the Kalman gain, $\hat{\mathbf{x}}_k$ is the posterior state estimate, and $\mathbf{P}_k$ is the corresponding covariance.
+
+\paragraph{Extended Kalman Filter}
+When the system dynamics are nonlinear, the Kalman Filter is extended by linearizing the system using a first-order Taylor series expansion. The nonlinear system is given by~\cite{wiley_kalman}:
+\begin{align}
+    \mathbf{x}_k &= \bm{f}(\mathbf{x}_{k-1}) + \mathbf{w}_{k-1} \\
+    \mathbf{z}_k &= \bm{h}(\mathbf{x}_k) + \mathbf{v}_k
+\end{align}
+where $\bm{f}$ and $\bm{h}$ are nonlinear state transition and observation functions. In EKF, the state and observation matrices are approximated by their Jacobians:
+\begin{align}
+    \mathbf{F}_{k} &= \left.\frac{\partial \bm{f}}{\partial \mathbf{x}}\right|_{\hat{\mathbf{x}}_{k-1}} , \quad
+    \mathbf{H}_k = \left.\frac{\partial \bm{h}}{\partial \mathbf{x}}\right|_{\hat{\mathbf{x}}_k^-}
+\end{align}
+
+EKF then performs the similar prediction and update steps as in the standard KF. The EKF is considered the de-facto standard approach for approximation of nonlinear systems' state~\cite{julier2004unscented}.
+
+% \paragraph{Unscented Kalman Filter (UKF)}
+% The Unscented Kalman Filter (UKF) addresses the limitations of the EKF in handling highly nonlinear systems by avoiding direct linearization of nonlinear functions $\bm{f}$ and $\bm{h}$. Instead of computing Jacobians as in EKF, UKF uses a deterministic sampling approach known as the unscented transform to propagate a minimal set of carefully chosen sample points, called sigma points, through the nonlinear functions to obtain the estimate of the system state~\cite{wan2000unscented}.
+
+% Initially, a set of sigma points is generated from the prior state estimate \(\hat{\mathbf{x}}_{k-1}\) and its associated covariance \(\mathbf{P}_{k-1}\):
+% \begin{align}
+%     \mathcal{X}_{k-1} &= \left[\hat{\mathbf{x}}_{k-1}, \quad \hat{\mathbf{x}}_{k-1} \pm \sqrt{(n+\lambda)\mathbf{P}_{k-1}}\right]
+% \end{align}
+% where $n$ is the dimension of the state vector, and $\lambda$ is a first-order scaling parameter that controls the distribution of sigma points around the mean. Each sigma point is propagated through the nonlinear state transition and observation functions:
+% \begin{align}
+%     \mathcal{X}_k &= f(\mathcal{X}_{k-1}, \mathbf{u}_{k-1}) \\
+%     \mathcal{Z}_k &= h(\mathcal{X}_k)
+% \end{align}
+
+% The predicted state mean and covariance, as well as measurement predictions, are computed using weighted averages of the transformed sigma points.
+
+% Compared to EKF, UKF provides more accurate estimates of the true mean and covariance in strongly nonlinear environments by preserving higher-order terms during the propagation, albeit at a higher computational cost~\cite{konatowski2016comparison}.
+
+% \subsubsection{Particle Filters}
+% The particle filtering algorithm was proposed for dealing with non-linear and non-Gaussian systems, commonly seen in real-world setups. It works by representing the posterior distribution of the system's state using a set of weighted particles that are propagated and re-sampled over time~\cite{wang2014particle}:
+
+% \begin{equation}
+% p(\mathbf{x}_k | \mathbf{z}_{1:k}) \approx \sum_{i=1}^{N} w_k^i \delta(\mathbf{x}_k - \mathbf{x}_k^i),
+% \end{equation}
+
+% where: $\mathbf{x}_k^i$ are particle samples, $w_k^i$ are their respective weights. Particle filters often outperform Kalman filters in non-Gaussian environments, making them suitable for complex indoor localization~\cite{elsanhoury2022precision}.
+
+\section{Wireless technologies}
+
+\subsection{Overview}
+\paragraph{Wi-Fi}
+Wi-Fi, an IEEE 802.11 standard~\cite{ieee80211}, is a wireless technology widely used for Wireless Local Area Networks (WLANs), operating on 2.4, 5, or 6 \si{\giga\hertz} bands with typical channel widths of 20 \si{\mega\hertz}.
+
+The majority Wi-Fi-based positioning methods rely on RSS fingerprinting~\cite{leitch2023indoor}. However, RSS is inherently unreliable due to variability from obstacles and reflections, making it difficult to establish a consistent relationship between RSS and distance~\cite{Asaad2022Review}. Therefore, to improve accuracy, standardization bodies have introduced alternative methods. For example, in 2016, the IEEE 802.11mc amendment added Fine-Time Measurements (FTM) to Wi-FI, enabling distance estimation via round-trip time (RTT) with sub-meter accuracy.
+
+\paragraph{BLE}
+Bluetooth Low-Energy (BLE), developed by the Bluetooth Special Interest Group (SIG), is a wireless technology for Personal Area Networks (PANs), operating in the \SI{2.4}{\giga\hertz} band with 1–2 \si{\mega\hertz} wide channels.
+
+Similarly to Wi-Fi, BLE typically uses RSS-based localization~\cite{leitch2023indoor}. However, in 2019, Bluetooth 5.1 specification introduced Direction Finding feature, which provides In-Phase and Quadrature (IQ) samples of the received signal, enabling for phase-based measurements. Bluetooth 6.0 later introduced Channel Sounding, combining phase and RTT measurements for sub-meter accuracy ranging estimates.
+
+% \subsubsection{Wi-Fi}
+% Wi-Fi (IEEE 802.11 standard~\cite{ieee80211}) is a wireless technology widely known for usage within Wireless Local Area Networks (WLANs). Common WiFi networks operate on 2.4 GHz, 5 GHz, or 6 GHz bands, typically utilizing 20 MHz channel width.
+
+% The majority of Wi-Fi-based approaches make use of RSS fingerprinting for position estimation~\cite{leitch2023indoor}. However, RSS-based localization is inherently unreliable because signal strength is influenced by obstacles and reflections, making it difficult to establish a consistent relationship between RSS and distance~\cite{Asaad2022Review}. Therefore, standardization bodies have been working on alternatives to improve localization accuracy. In 2016, WiFi introduced Fine-Time Measurements (FTM) in the IEEE 802.11mc standard, enabling distance estimation using round-trip time (RTT) with sub-meter accuracy. 
+
+% \subsubsection{Bluetooth Low-Energy (BLE)}
+% Bluetooth LE is a wireless technology developed by Bluetooth Special Interest Group (Bluetooth SIG) used in Personal Area Networks (PAN). Bluetooth operates in 2.4 GHz band, divided into 1/2 MHz wide channels. 
+
+% Similar to Wi-Fi, BLE often relies on some form of RSS-based localization methods~\cite{leitch2023indoor}. In 2019, Bluetooth 5.1 Core Specification introduced a Direction Finding feature that provided In-Phase and Quadrature (IQ) samples of the received signal, enabling for phase-based measurements. Later, Bluetooth 6.0 introduced Channel Sounding, that combines phase-based and round-trip time measurements to provide sub-meter ranging estimates.
+
+\paragraph{UWB}
+Ultra-wide Band (UWB) is an IEEE 802.15.4a/z standard~\cite{ieee802154}  impulse radio technology, commonly used specifically for indoor positioning tasks. Unlike other, narrow-band technologies, such as Wi-Fi or Bluetooth, UWB uses wide band width, typically around 500-1000 \si{\mega\hertz}, operating on 3.1-10.6 \si{\giga\hertz} frequencies.
+
+For distance estimation, UWB systems rely on precise Time-of-Flight measurements. The key advantage of UWB systems is high resolution, made possible by transmitting short pulses in time-domain. This allows UWB to distinguish between multipath components and makes it immune to interference effects, allowing a centimeter-level accuracy. In addition, relatively low center frequency still allows UWB signals to penetrate the obstacles~\cite{cheraghinia2024comprehensive}.
+
+\subsection{Technical details}
+
+The underlying drawbacks of using narrow-band technologies in positioning systems lie in their low-level specifics. These include modulation schemes and signal bandwidth. A modulation is the process of encoding digital information into signals by modifying some of their physical characteristics. The bandwidth refers to the range of frequencies contained within a generated signal.
+
+\subsubsection{Modulation schemes}
+
+% \begin{figure}[h!]
+% \includegraphics[width=0.7\textwidth]{Graphics/gfsk.pdf}
+% \centering
+% \caption{BLE signal modulation illustration (simplified)}
+% \label{fig:ble-mod}
+% \end{figure}
+
+BLE uses a modification of Frequency-Shift Keying (FSK) -- Gaussian FSK (GFSK), where data is encoded as frequency deviations from a central continuous wave carrier:
+
+\begin{equation}
+S(t) = A e^{j\left(2\pi (f_c t + \Delta f \int_{0}^{t} m(\tau) d\tau)\right)},
+\end{equation}
+
+where: $A$ is the signal amplitude, $f_c$ is the carrier frequency, $\Delta f$ is the frequency deviation, $m(t)$ is the data-modulating function. 
+
+% The illustration of GFSK-based scheme is provided in Fig.\autoref{fig:ble-mod}
+
+Wi-Fi primarily employs Orthogonal Frequency-Division Multiplexing (OFDM), where data is transmitted over multiple orthogonal subcarriers. Each subcarrier is modulated using Binary Phase-Shift Keying (BPSK), Quadrature Phase-Shift Keying (QPSK), or higher-order modulations such as 16-QAM or 64-QAM. The baseband OFDM signal is expressed as:
+
+\begin{equation}
+S(t) = \sum_{k=0}^{N-1} X_k e^{j 2 \pi f_k t},
+\end{equation}
+
+where: $X_k$ is the symbol modulated onto the $k$-th subcarrier, $f_k$ is the subcarrier frequency,
+$N$ is the number of subcarriers.
+
+\begin{figure}[tbh]
+\includegraphics[width=0.85\textwidth]{Graphics/uwb_bpsk.pdf}
+\centering
+\caption{Conceptual illustration of a UWB signal BPM/BPSK modulation .}
+\label{fig:uwb-mod}
+\end{figure}
+
+Unlike narrow-band technologies, UWB is an Impulse Radio (IR) technology. It transmits short sequences of narrow pulses with the duration in the sub-nanosecond order, and uses pulse-based modulation scheme, which is typically a ternary modulation, achieved through the combination of:
+
+\begin{itemize}
+    \item Binary Phase-Shift Keying (BPSK): The phase of each pulse is shifted by 180° to encode binary data. For BPSK, the transmitted signal is given by:
+    \begin{equation}
+    S(t) = A p(t) e^{j (\pi m_n)},
+    \end{equation}
+    where: $A$ is the amplitude of the transmitted pulse, $p(t)$ is the pulse shaping function, and $m_n \in \{0, 1\}$ is the modulating bit.
+
+    \item Burst Position Modulation (BPM): The information is encoded by the position of the transmitted pulse in a time slot. For BPM, the transmitted signal can be expressed as:
+    \begin{equation}
+    S(t) = A p\left(t - m_n T_c\right), \quad T_c = T_f / M
+    \end{equation}
+    where: $T_c$ is the chip duration, $m_n \in \{0, 1, \dots, M-1\}$ selects one of $M$ available slots within a time frame $T_f$, and $p(t)$ is the pulse shape.
+\end{itemize}
+
+\autoref{fig:uwb-mod} illustrates a UWB signal with BPM/BPSK modulation. Each bit is represented by a sequence of two impulses, spaced by one frame duration $T_f$. The position of each pulse within its frame is defined by a time-hopping code  $m_n \in \{0, 1, 2, 3\}$, selecting one of $M = 4$ slots of duration $T_c$, while polarity is modulated using BPSK to encode the binary value. This example transmits the binary sequence:  
+$$
+\boxed{0\ 1\ 0}
+$$ 
+with time-hopping code:  
+$$
+\{1, 2\},\ \{2, 1\},\ \{1, 0\}.
+$$ 
+
+\subsubsection{Bandwidth}
+The use of ultrashort pulses in ultra-wideband systems enables exceptionally high temporal resolution, which is critical for precise estimation of the signal's time of arrival and, consequently, accurate time-of-flight measurements. This capability is governed by the time–bandwidth uncertainty principle, which imposes a lower bound on the product of time duration $\Delta t$ and bandwidth $\Delta f$:
+
+\begin{equation} \Delta t \cdot \Delta f \geq \frac{1}{2}. \end{equation}
+
+The spatial resolution $\Delta D$ associated with ToF-based ranging is therefore given by:
+
+\begin{equation} \Delta D = \frac{c}{2\Delta f}, \end{equation}
+
+where $c$ is the speed of light in free space. Accordingly, larger bandwidths directly improve ranging precision.
+
+In practical terms, achieving finer resolution in the time domain requires broader spectral occupancy in the frequency domain. This time-frequency duality is formally described by the Fourier Transform:
+
+\begin{equation} 
+\mathcal{F}{x(t)} = X(f) = \int_{-\infty}^{\infty} x(t) e^{-j2\pi ft} , dt, 
+\end{equation}
+
+
+
+which decomposes a time-domain signal $x(t)$ into its frequency-domain representation $X(f)$. A canonical example is the Dirac delta function $\delta(t)$, which satisfies:
+
+\begin{equation} \mathcal{F}{\delta(t)} = 1, \end{equation}
+
+indicating that a theoretically infinitesimal pulse contains all frequencies with equal amplitude -- i.e., infinite bandwidth. While physical systems cannot generate true delta functions, UWB pulses (e.g., Gaussian monocycles or higher-order derivatives) approximate this behavior, exhibiting wide spectral occupancy and short temporal duration.
+
+% \begin{figure}[h!]
+% \includegraphics[width=0.75\textwidth]{Graphics/narrowband_vs_uwb.pdf}
+% \centering
+% \caption{Comparison of a UWB impulse signal and a narrowband (BLE/Wi-Fi) waveform.}
+% \label{fig:uwbvsnb}
+% \end{figure}
+
+UWB's bandwidth of \SI{500}{\mega\hertz} or more correlates with sub-nanosecond temporal resolution and centimeter-level ranging accuracy. In contrast, conventional narrowband systems (e.g., BLE, Wi-Fi) transmit signals with limited bandwidth (1–20 \si{\mega\hertz}), yielding time resolution of tens to hundreds of nanoseconds. This restricts their temporal and spatial resolution, leading to ranging errors in the order of meters. % The difference in time-domain characteristics is illustrated in Fig.\autoref{fig:uwbvsnb}. 
+Additionally, the usage of continuous waves makes them susceptible to multipath interference. Together, this renders narrowband technologies unsuitable for fine-grained localization in multipath-dense environments.
+
+However, to precisely estimate the ToF, UWB still has to to distinguish the actual direct signal path from multipath components. For this purpose, UWB relies on Leading Edge Detection (LDE) algorithms. LDE operate on Channel Impulse Response (CIR) (refer to \autoref{principles}).
+
+\section{UWB principles}\label{principles}
+\subsection{UWB frame}
+
+\begin{figure}[tbh]
+\includegraphics[width=0.6\textwidth]{Graphics/uwb_phy.pdf}
+\centering
+\caption{IEEE 802.15.4a UWB physical layer frame structure.}
+\label{fig:phy}
+\end{figure}
+
+IEEE 802.15.4a standard-compliant UWB packet format (see \autoref{fig:phy}) follows the below structure:
+\begin{itemize}
+    \item Synchronization Header (SHR): Contains the preamble (SYNC) and SFD (start of frame
+delimiter) sequences, used for timing acquisition and synchronization.
+    \item Physical Header (PHR): Encodes frame control information.
+    \item Data Payload: Contains the transmitted information.
+\end{itemize}
+
+
+% \begin{figure}[h!]
+% \includegraphics[width=8cm]{Graphics/preamble.png}
+% \centering
+% \caption{Example of the modulated preamble code.}
+% \label{fig:preamble}
+% \end{figure}
+%TODO!: Review whether this is really needed here...
+
+The synchronization header of the frame is particularly relevant for UWB ranging capabilities, as it contains the preamble used for CIR reconstruction. In SHR, a SYNC sequence, or preamble, is transmitted first. It consists of the repetition of known sequence codes. %Fig.\autoref{fig:preamble} shows the example of the modulated preamble code. 
+The codes used in the preamble are defined in the standard, and are part of family of codes known as perfect ternary sequences~\cite{mcelroy2014comparison}. These codes are constructed using a ternary alphabet $\{0, -1, 1\}$ to possess unique perfect periodic autocorrelation properties. 
+
+The autocorrelation function of a sequence $\bm s$ of length $N$ for shift $\tau$ is given by:
+\begin{equation}
+R(\tau) = \sum_{i=0}^{N-1} \bm s_i \cdot \bm s_{i+\tau \bmod N}.
+\end{equation}
+A sequence has perfect periodic autocorrelation if all off-peak ($\tau \ne 0 \bmod N$) autocorrelation values are zero~\cite{blake2014construction}:
+
+\begin{equation}
+R(\tau) =
+\begin{cases}
+    N, & \tau = 0 \bmod N,\\
+    0, & \tau \neq 0 \bmod N.
+\end{cases}
+\end{equation}
+
+The perfect autocorrelation property ensures that once the presence of a transmission is detected by the receiver device, the remainder of the preamble can be used for CIR estimation~\cite{mcelroy2014comparison}.
+
+\subsection{Channel impulse response}\label{cir_theory}
+
+\begin{figure}[tbh]
+\includegraphics[width=0.75\textwidth]{Graphics/saved_sample.pdf}
+\centering
+\caption{Example of UWB Channel Impulse Response.}
+\label{fig:cir}
+\end{figure}
+
+Channel Impulse Response (CIR) is fundamental characteristic of any UWB system. The receiving device estimates CIR by correlating a known preamble sequence with a received signal. CIR $h(t)$ is often modeled as~\cite{cheraghinia2024comprehensive}:
+
+\begin{equation}
+h(t) = \sum_{i} a_i \delta(t - \tau_i) + \nu(t),
+\end{equation}
+
+where $a_i$ and $\tau_i$ represent the amplitude and delay of the $i$-th multipath component, respectively, $\delta(t)$ denotes the Dirac delta function, and $\nu(t)$ represents diffuse multipath components. The first term encapsulates multipath propagation phenomena, where the transmitted signal is propagated to the receiver through multiple paths, arriving with different delays. The second term models random noise, typically with Additive white Gaussian noise (AWGN).
+
+To this end, CIR characterizes how an impulse signal propagates through the wireless channel and captures the features of the propagation environment. Typical accumulator of Channel Impulse Response is presented in the \autoref{fig:cir}. The sampling interval of the CIR is equal to half of the period of the fundamental frequency (FF), which is typically around \SI{1}{\nano\second} for \SI{500}{\mega\hertz} FF. Consequently, each sample of the CIR corresponds to a distance of \SI{\approx 30}{\centi\metre} (given that UWB signal propagates through the air medium). As was noted before, such high temporal resolution allows UWB to distinguish between multiple paths, achieving precise ToF estimation. This process is performed by LDE algorithm.
+
+\subsubsection{Leading edge detection}\label{lde}
+
+\begin{figure}[tbh]
+\includegraphics[width=0.8\textwidth]{Graphics/uwb_lde_error.pdf}
+\centering
+\caption{Conceptual illustration of undetected first path in LDE process.}
+\label{fig:lde-nlos}
+\end{figure}
+
+The Leading Edge Detection (LDE) algorithm operates on CIR, aimed at identifying the actual first arriving path (FP), ensuring accurate time-stamping. The goal of LDE is to select the detection threshold in a most reliable way, so to locate the first significant peak in the CIR, while preventing the confusion of the FP with multipath components or channel noise:
+
+\begin{equation}
+\tau_{\text{LE}} = \arg \min_{\tau} \{ h(\tau) \geq \theta_{\text{LDE}} \},
+\end{equation}
+
+where $\theta_{\text{LDE}}$ is a detection threshold, and and $\tau_{\text{LE}}$ is the estimated arrival time of the first path.
+
+
+Given LoS propagation, the LDE algorithm can produce accurate time-stamps. However, in severe NLoS cases, the direct path signal can be attenuated to the extent that no longer allows the LDE to work reliably, and the reported time-stamp will correspond to the reflected signal. Such scenario is presented in \autoref{fig:lde-nlos}.
+
+\subsection{Ranging techniques}
+\subsubsection{Two-Way ranging}\label{theory:twr}
+
+\begin{figure}[tbh]
+\includegraphics[width=0.7\textwidth]{Graphics/twr.pdf}
+\centering
+\caption[Two-way ranging exchange.]{Two-way ranging exchange (single-sided and double-sided).}
+\label{fig:twr}
+\end{figure}
+
+ToF estimation with single, one-way communication, requires precise clock sycnhronization between tag and anchor devices. This is extremely hard to achieve, as centimeter-level precision in ToF estimation requires clock difference to be in the order of picoseconds. Therefore, UWB systems often rely on Two-Way Ranging (TWR) to accurately determine distance, eliminating the need for precise time synchronization between devices. TWR works by measuring the round-trip time of signals.
+
+\paragraph{SS-TWR}
+The simplest form of TWR is Single-Sided Two-Way Ranging (SS-TWR), where a responder device (B) sends a reply upon receiving a request signal from initiator device (A). \autoref{fig:twr} illustrates the ranging exchange in the TWR process. The ToF is then inferred from the following equation:
+
+\begin{equation}\label{tof-ss}
+T_{ToF} = \frac{1}{2} (T_{roundA} - T_{replyB}),
+\end{equation}
+
+where $T_{replyB}$ is the time delay at the responder, and $T_{ToF}$ is the time-of-flight. Under ideal conditions, $T_{ToF}$ can be precisely estimated. However, this estimate can still be largely affected by the clock drift~\cite{neirynck2016alternative}.
+
+\paragraph{DS-TWR} 
+To mitigate clock drift errors, Double-Sided Two-Way Ranging (DS-TWR) is used. DS-TWR adds a symmetrical exchange to SS-TWR by sending additional message from the initiator back to the responder upon the reception of the reply message. Similarly to SS-TWR (\autoref{tof-ss}), in DS-TWR the ToF is derived from the following system of equations: 
+
+\begin{equation}
+\begin{cases}
+T_{roundA} = T_{replyB} + 2T_{ToF}\\
+T_{roundB} = T_{replyA} + 2T_{ToF}
+\end{cases}
+\end{equation}
+
+\begin{equation}
+T_{ToF} = \frac{1}{4} (T_{roundA} - T_{replyB} + T_{roundB} - T_{replyA}).
+\end{equation}
+
+However, this approach has a limitation due to assumption that the reply delays $T_{replyX}$ will be equal on both sides~\cite{neirynck2016alternative}. 
+
+\paragraph{ADS-TWR}\label{adstwr}
+A variation known as Alternative DS-TWR (ADS-TWR) has been proposed by Neirynck et al. in 2016~\cite{neirynck2016alternative}. ADS-TWR eliminates the requirement for equal reply delays, reducing complexity of the system and improving ToF estimation accuracy. Instead of relying on reply delay symmetry, it applies:
+
+\begin{equation}
+T_{ToF} = \frac{T_{roundA}T_{roundB} - T_{replyA}T_{replyB}}{T_{roundA} + T_{replyA} + T_{roundB} + T_{replyB}}.
+\end{equation}
+
+This method minimizes the impact of the clock drift error, making it more robust for practical implementations.
+
+\subsubsection{Time-division multiple access}\label{tdma}
+
+% \begin{figure}[h!]
+% \includegraphics[width=8cm]{Graphics/tdma.png}
+% \centering
+% \caption{TDMA timing diagram}
+% \label{fig:tdma}
+% \end{figure}
+% TODO: Do we really need this?
+
+Generally, it is desirable to obtain the measurement result on the tag device to minimize system complexity. However, due to the nature of DS-TWR, this requires the measurement to be initiated by the anchor, as it would otherwise be necessary to introduce additional exchanges that would degrade the system's performance in terms of ranging frequency. Consequently, this poses a problem of synchronization between multiple anchor devices to prevent them from ranging simultaneously and avoid cross-interference. 
+
+To solve this problem, Time-Division Multiple Access (TDMA) method is used. TDMA is a channel access method, that allows multiple devices to share the same channel by dividing the ranging process into different time slots, preventing signal collisions~\cite{falconer1995time}. The process is as follows:
+
+\begin{itemize}
+    \item The network controller (tag) assigns a time slot to each ranging device (anchor).
+    \item Devices transmit signals only within their allocated slots.
+    \item Receivers process only signals within the designated time windows, preventing overlap.
+\end{itemize}
+
+Originally, TDMA was used in the satellite communication systems, but later was also adopted in UWB TWR-based systems. 
+
+% Schematic timing diagram illustrating the TDMA-based approach can be found in Fig.\autoref{fig:tdma}. 
+
+\section{Sources of errors}\label{error_sources}
+
+\begin{figure}[tbh]
+\includegraphics[width=0.75\textwidth]{Graphics/obstacles.pdf}
+\centering
+\caption[Illustration of error sources in UWB systems.]{Illustration of error sources in UWB systems. The transmitter (Tx) communicates with three receivers (Rx 1-3) under different conditions: complete signal blockage (Rx 1), LoS propagation (Rx 2), and multipath propagation (Rx 3) involving reflection, diffraction, and obstacle penetration.}
+\label{fig:error_nlos}
+\end{figure}
+
+Despite the high precision of UWB-based ranging systems, several error sources affect their performance, particularly in indoor and multipath-rich environments. These include Non-Line-of-Sight (NLOS) propagation, multipath interference, and refraction effects~\cite{dardari2009ranging}. The schematic in \autoref{fig:error_nlos} illustrates the principal NLoS conditions.
+
+\paragraph{Multipath interference}
+
+Multipath occurs when multiple copies of the transmitted signal arrive at the receiver via different paths due to reflections, diffractions, and scattering. UWB systems are generally resilient to multipath because of their short pulses, which allow separation of distinct paths in the Channel Impulse Response (CIR). This phenomena is discussed in \autoref{cir_theory}. However, in dense multipath environments, the LDE algorithm can misclassify later multipath component as the actual direct path, introducing a positive bias in the estimated range:
+
+\begin{equation}\label{multipath_err}
+    \Delta d =  \tau_i c,
+\end{equation}
+
+where $\tau_i$ is the delay of the $i$-th multipath component.
+
+\paragraph{NLoS propagation}
+
+NLOS propagation occurs when the direct path between the transmitter and receiver is obstructed, and the first arriving signal is a reflected, refracted, or diffracted version of the original pulse. This also introduces a positive bias in the estimated range. In case of partial NLoS, where the direct path still exists but passes through a refractive material (e.g., a wall or furniture), which slows the signal down, the measurement error is modeled as:
+
+\begin{equation}
+\Delta d = (\sqrt{\epsilon_r} - 1) d_o,
+\end{equation}
+where $d_o$ is the thickness of the obstacle, and $\epsilon_r$ is its relative permittivity. 
+
+In the case of complete blockage, the receiver can only observe the reflected or diffracted multipath signal components, therefore reporting wrong distance estimate. This effect is illustrated in \autoref{lde}. The error model is analogous to the multipath case (\autoref{multipath_err}) described above. Empirically, the resulting range bias $b_r$ is often modeled as a log-normal random variable:
+
+\begin{equation}
+b_r \sim \text{Lognormal}(\mu, \sigma^2).
+\end{equation}
+
+This effect of error can be reduced by NLoS identification and mitigation techniques, such as machine learning models, discussed in \autoref{related_work}.
+
+\paragraph{Geometric dilution of precision}
+
+In addition to measurement errors, the accuracy of UWB positioning systems is fundamentally influenced by the geometric configuration of anchor nodes.
+
+This impact is quantified by the Geometric Dilution of Precision (GDOP), a metric that describes how uncertainty in distance measurements propagates to uncertainty in estimated position. Consider $N$ anchor nodes located at known positions $\mathbf{p}_{A_i} = (x_{A_i}, y_{A_i})$ for $i = 1, \dots, N$, and a tag at position $\mathbf{p}_T = (x_T, y_T)$. The measured distance from the tag to the $i$-th anchor is given by:
+
+\begin{equation}
+d_i = \|\mathbf{p}_T - \mathbf{p}_{A_i}\|.
+\end{equation}
+
+Linearizing the system of distance equations around an estimate $\mathbf{p}_0 = (x_0, y_0)$ yields the Jacobian matrix $H$, whose rows are unit direction vectors from the linearization point to each anchor:
+
+\begin{equation}
+H = \begin{bmatrix}
+\frac{x_0 - x_{A_1}}{d_1} & \frac{y_0 - y_{A_1}}{d_1} \\
+\vdots & \vdots \\
+\frac{x_0 - x_{A_N}}{d_N} & \frac{y_0 - y_{A_N}}{d_N}
+\end{bmatrix}.
+\end{equation}
+
+The GDOP is then defined as~\cite{Wang2022GDOP}:
+
+\begin{equation}
+\text{GDOP} = \sqrt{\text{trace}\left((H^\top H)^{-1}\right)}.
+\end{equation}
+
+Lower GDOP values correspond to better geometric configurations. The minimal GDOP in 2-D localization is theoretically attained when the target lies inside the convex hull formed by anchors placed at the vertices of a regular $N$-sided polygon, where $N$ is the number of anchors~\cite{Wang2022GDOP,Levanon2000GDOP}. Optimal anchor deployment is essential for reducing position uncertainty, especially in environments with unavoidable NLoS and multipath conditions.
