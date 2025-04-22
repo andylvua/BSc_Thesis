@@ -47,9 +47,12 @@ headsepline, % Uncomment to get a line under the header
 
 \usepackage[
 sorting=none,
-style=ieee,
+bibstyle=ieee,
+citestyle=numeric-comp,
 doi=true,
 url=false,
+isbn=false,
+date=year,
 ]{biblatex}
 %% A.Y.: Disable sorting, use default `biber` backend, set style to IEEE (more traditional, properly includes authors)
 
@@ -88,7 +91,7 @@ url=false,
 %	THESIS INFORMATION
 %----------------------------------------------------------------------------------------
 
-\thesistitle{Development and Characterization of\\UWB-based Indoor Positioning System}
+\thesistitle{Development and characterization of\\UWB-based indoor positioning system}
 
 \supervisor{Oleg \textsc{Farenyuk}}
 \examiner{}
@@ -168,31 +171,6 @@ url=false,
 \end{center}
 \end{titlepage}
 
-%----------------------------------------------------------------------------------------
-%	DECLARATION PAGE
-%----------------------------------------------------------------------------------------
-
-\begin{declaration}
-\noindent I, \authorname, declare that this thesis titled, \enquote{\nonewlines{\ttitle}} and the work presented in it are my own. I confirm that:
-
-\begin{itemize} 
-\item This work was done wholly or mainly while in candidature for a research degree at this University.
-\item Where any part of this thesis has previously been submitted for a degree or any other qualification at this University or any other institution, this has been clearly stated.
-\item Where I have consulted the published work of others, this is always clearly attributed.
-\item Where I have quoted from the work of others, the source is always given. With the exception of such quotations, this thesis is entirely my own work.
-\item I have acknowledged all main sources of help.
-\item Where the thesis is based on work done by myself jointly with others, I have made clear exactly what was done by others and what I have contributed myself.
-\end{itemize}
-
-\vspace{\baselineskip}
-
-\noindent Signed:\\
-\rule[0.5em]{25em}{0.5pt}
- 
-\noindent Date:\\
-\rule[0.5em]{25em}{0.5pt}
-\end{declaration}
-
 \cleardoublepage
 
 %----------------------------------------------------------------------------------------
@@ -205,53 +183,26 @@ url=false,
 %	ACKNOWLEDGEMENTS
 %----------------------------------------------------------------------------------------
 
-\input{Chapters/acknowledgements}
+\input{Chapters/acknowledgments}
 
 %----------------------------------------------------------------------------------------
 %	LIST OF CONTENTS/FIGURES/TABLES PAGES
 %----------------------------------------------------------------------------------------
 
+\renewcommand{\contentsname}{Table of contents}
+%% A.Y.: Use traditional naming
+
 \tableofcontents % Prints the main table of contents
-
-% \listoffigures % Prints the list of figures
-
-% \listoftables % Prints the list of tables
-
-%----------------------------------------------------------------------------------------
-%	ABBREVIATIONS
-%----------------------------------------------------------------------------------------
-
-% \begin{abbreviations}{ll} % List of abbreviations (a table of two columns)
-
-% \end{abbreviations}
-
-%----------------------------------------------------------------------------------------
-%	PHYSICAL CONSTANTS/OTHER DEFINITIONS
-%----------------------------------------------------------------------------------------
-
-% \begin{constants}{lr@{${}={}$}l} % The list of physical constants is a three column table
-
-% \end{constants}
-
-%----------------------------------------------------------------------------------------
-%	SYMBOLS
-%----------------------------------------------------------------------------------------
-
-% \begin{symbols}{lll} % Include a list of Symbols (a three column table)
-
-% \end{symbols}
 
 %----------------------------------------------------------------------------------------
 %	DEDICATION
 %----------------------------------------------------------------------------------------
 
-\dedicatory{This thesis is dedicated to my Father -- for being the one person I can always rely on, at any time, in any need. For his unwavering support in every step of my life. There is no one I trust more, and no one who has done more for me\ldots} 
+\dedicatory{This thesis is dedicated to my father -- for being the one person I can always trust and rely on, at any moment, in any need. For his quiet strength and unwavering support at every step of my life\ldots} 
 
 %----------------------------------------------------------------------------------------
 %	THESIS CONTENT - CHAPTERS
 %----------------------------------------------------------------------------------------
-
-% A.Y.: General TODOs: Fix bibliography (capitalization, missing fields, overfull horizontal boxes, just overall correctness). Fix all images to be in .png format (.jpg is buggy). Fix figures files naming (maybe structure into folders?).
  
 \mainmatter
 \pagestyle{thesis}
@@ -261,17 +212,14 @@ url=false,
 \include{Chapters/theoretical_background}
 \include{Chapters/methodology} 
 \include{Chapters/experiments_and_results} 
-\include{Chapters/conclusions} 
-
-%----------------------------------------------------------------------------------------
-%	THESIS CONTENT - APPENDICES
-%----------------------------------------------------------------------------------------
-
-% \appendix
+\include{Chapters/conclusion} 
 
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY
 %----------------------------------------------------------------------------------------
+
+\emergencystretch=1em
+%% A.Y.: Allow Latex to apply emergency stretch to prevent overfull hboxes in bibliography
 
 % \nocite{*}
 \printbibliography[heading=bibintoc]

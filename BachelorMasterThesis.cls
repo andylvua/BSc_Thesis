@@ -204,7 +204,7 @@
 \RequirePackage{booktabs} % Required for better table rules
 
 \RequirePackage{caption} % Required for customising the captions
-\captionsetup{justification=centerlast,font=small,labelfont=sc,margin=50pt}
+\captionsetup{justification=centerlast,font=small,labelfont=sc,margin=40pt}
 
 %----------------------------------------------------------------------------------------
 %	DEFINE CUSTOM THESIS INFORMATION COMMANDS
@@ -238,7 +238,7 @@
 \newcommand{\HRule}{\rule{.9\linewidth}{.6pt}} % New command to make the lines in the title page
 \newcommand{\decoRule}{\rule{.8\textwidth}{.4pt}} % New command for a rule to be used under figures
 
-\setcounter{tocdepth}{2} % The depth to which the document sections are printed to the table of contents
+\setcounter{tocdepth}{3} % The depth to which the document sections are printed to the table of contents
 \ProvideDocumentCommand{\addchaptertocentry}{ m }{%
 	\addcontentsline{toc}{chapter}{#1}%
 }
@@ -416,8 +416,8 @@ KOMA-script documentation for details.}]{fancyhdr}
 
 \usepackage{xcolor}
 \colorlet{mdtRed}{red!50!black}
-\newcommand{\acknowledgementname}{Acknowledgements}
-\providecaptionname{american,australian,british,canadian,english,newzealand,UKenglish,USenglish} {\acknowledgementname}{Acknowledgements} % Acknowledgement text for English countries
+\newcommand{\acknowledgementname}{Acknowledgments}
+\providecaptionname{american,australian,british,canadian,english,newzealand,UKenglish,USenglish} {\acknowledgementname}{Acknowledgments} % Acknowledgement text for English countries
 \providecaptionname{german,ngerman,austrian,naustrian}{\acknowledgementname}{Danksagung} % Acknowledgement text for Germanic countries
 
 \ifbool{consistentlayout}{
