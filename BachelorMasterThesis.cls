@@ -72,18 +72,36 @@
 	{\parindent \z@ \chapteralign \normalfont
 		\ifnum \c@secnumdepth >\m@ne
 		\if@mainmatter
-		\ifbool{chapteroneline}{%
-			\chapterfont \mdtChapapp\thechapter\autodot\enspace
+		% \ifbool{chapteroneline}{%
+		% 	\chapterfont \mdtChapapp\thechapter\autodot\enspace
+		% }{%
+		% 	\chapterprefixfont \@chapapp\space \thechapter
+		% 	\par\nobreak
+		% 	\chapterinbetweenskip
+		% }%
+		% \fi
+		% \fi
+		% \interlinepenalty\@M%
+		% \chapterfont #1\par\nobreak
+		% \chapterbelowskip
+            \ifbool{chapteroneline}{%
+			% \chapterfont \mdtChapapp\thechapter\autodot\enspace
+                \chapterprefixfont \@chapapp\space \thechapter:\autodot\enspace
+                \fi
+    		\fi
+    		\interlinepenalty\@M%
+    		  #1\par\nobreak
+    		\chapterinbetweenskip
 		}{%
 			\chapterprefixfont \@chapapp\space \thechapter
 			\par\nobreak
 			\chapterinbetweenskip
+                \fi
+    		\fi
+    		\interlinepenalty\@M%
+    		\chapterfont #1\par\nobreak
+    		\chapterbelowskip
 		}%
-		\fi
-		\fi
-		\interlinepenalty\@M%
-		\chapterfont #1\par\nobreak
-		\chapterbelowskip
 	}
 	\thispagestyle{\chapter@p@gestyle}
 }
@@ -238,7 +256,7 @@
 \newcommand{\HRule}{\rule{.9\linewidth}{.6pt}} % New command to make the lines in the title page
 \newcommand{\decoRule}{\rule{.8\textwidth}{.4pt}} % New command for a rule to be used under figures
 
-\setcounter{tocdepth}{3} % The depth to which the document sections are printed to the table of contents
+\setcounter{tocdepth}{2} % The depth to which the document sections are printed to the table of contents
 \ProvideDocumentCommand{\addchaptertocentry}{ m }{%
 	\addcontentsline{toc}{chapter}{#1}%
 }
@@ -411,27 +429,27 @@ KOMA-script documentation for details.}]{fancyhdr}
 }
 
 %----------------------------------------------------------------------------------------
-%	ACKNOWLEDGEMENTS PAGE DESIGN
+%	ACKNOWLEDGMENT PAGE DESIGN
 %----------------------------------------------------------------------------------------
 
 \usepackage{xcolor}
 \colorlet{mdtRed}{red!50!black}
-\newcommand{\acknowledgementname}{Acknowledgments}
-\providecaptionname{american,australian,british,canadian,english,newzealand,UKenglish,USenglish} {\acknowledgementname}{Acknowledgments} % Acknowledgement text for English countries
-\providecaptionname{german,ngerman,austrian,naustrian}{\acknowledgementname}{Danksagung} % Acknowledgement text for Germanic countries
+\newcommand{\acknowledgmentname}{Acknowledgment}
+\providecaptionname{american,australian,british,canadian,english,newzealand,UKenglish,USenglish} {\acknowledgmentname}{Acknowledgment} % Acknowledgment text for English countries
+\providecaptionname{german,ngerman,austrian,naustrian}{\acknowledgmentname}{Danksagung} % Acknowledgment text for Germanic countries
 
 \ifbool{consistentlayout}{
-	\DeclareDocumentEnvironment{acknowledgements}{}{%
-		\tttypeout{\acknowledgementname}
-		\addchap*{\acknowledgementname}
+	\DeclareDocumentEnvironment{acknowledgment}{}{%
+		\tttypeout{\acknowledgmentname}
+		\addchap*{\acknowledgmentname}
 	}
 }
 {
-	\DeclareDocumentEnvironment{acknowledgements}{}{%
+	\DeclareDocumentEnvironment{acknowledgment}{}{%
 		\checktoopen
-		\tttypeout{\acknowledgementname}
+		\tttypeout{\acknowledgmentname}
 		\thispagestyle{plain}
-		\begin{center}{\huge\textit{\acknowledgementname}\par}\end{center}
+		\begin{center}{\huge\textit{\acknowledgmentname}\par}\end{center}
 	}
 	{
 		\vfil\vfil\null

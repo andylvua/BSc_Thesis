@@ -38,8 +38,8 @@ singlespacing, % Single line spacing, alternatives: onehalfspacing or doublespac
 %nohyperref, % Uncomment to not load the hyperref package
 headsepline, % Uncomment to get a line under the header
 % chapterinoneline, % Uncomment to place the chapter title next to the number on one line
-%consistentlayout, % Uncomment to change the layout of the declaration, abstract and acknowledgements pages to match the default layout
-]{BachelorMasterThesis} % The class file specifying the document structure
+%consistentlayout, % Uncomment to change the layout of the declaration, abstract and acknowledgment pages to match the default layout
+]{BachelorMasterThesis}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1, T2A]{fontenc}
@@ -55,6 +55,10 @@ isbn=false,
 date=year,
 ]{biblatex}
 %% A.Y.: Disable sorting, use default `biber` backend, set style to IEEE (more traditional, properly includes authors)
+
+\DefineBibliographyStrings{english}{
+  bibliography = {References},
+}
 
 \addbibresource{bibliography.bib}
 
@@ -72,6 +76,8 @@ date=year,
 \usepackage{caption}
 \usepackage{makecell}
 \usepackage{siunitx}
+\usepackage{tocloft}
+\usepackage{tabularx}
 
 %----------------------------------------------------------------------------------------
 %	MARGIN SETTINGS
@@ -144,16 +150,17 @@ date=year,
 \begin{minipage}[t]{0.4\textwidth}
 \begin{flushleft} \large
 \emph{Author:}\\
-\href{https://www.researchgate.net/profile/Andrii-Yaroshevych}{\authorname}
+\href{https://orcid.org/0009-0001-4766-9954}{\authorname}
 \end{flushleft}
 \end{minipage}
 \begin{minipage}[t]{0.4\textwidth}
 \begin{flushright} \large
 \emph{Supervisor:} \\
-\href{https://www.researchgate.net/profile/Oleg-Farenyuk}{\supname}
+\href{https://orcid.org/0000-0002-0762-2377}{\supname}
+% \href{https://orcid.org/0000-0003-2110-4661}{Oleg \textsc{Kapshii}}
 \end{flushright}
 \end{minipage}\\[3cm]
- 
+
 \vfill
 
 \large \textit{A thesis submitted in fulfillment of the requirements\\ for the degree of \degreename}\\[0.3cm] % University requirement text
@@ -180,10 +187,10 @@ date=year,
 \input{Chapters/abstract}
 
 %----------------------------------------------------------------------------------------
-%	ACKNOWLEDGEMENTS
+%	ACKNOWLEDGMENT
 %----------------------------------------------------------------------------------------
 
-\input{Chapters/acknowledgments}
+\input{Chapters/acknowledgment}
 
 %----------------------------------------------------------------------------------------
 %	LIST OF CONTENTS/FIGURES/TABLES PAGES
@@ -191,8 +198,11 @@ date=year,
 
 \renewcommand{\contentsname}{Table of contents}
 %% A.Y.: Use traditional naming
+\setlength{\cftbeforetoctitleskip}{20pt}
+\setlength{\cftaftertoctitleskip}{20pt}
+%% A.Y.: Adjust spacing around ToC to fit it one page
 
-\tableofcontents % Prints the main table of contents
+\tableofcontents
 
 %----------------------------------------------------------------------------------------
 %	DEDICATION
@@ -212,7 +222,61 @@ date=year,
 \include{Chapters/theoretical_background}
 \include{Chapters/methodology} 
 \include{Chapters/experiments_and_results} 
-\include{Chapters/conclusion} 
+\input{Chapters/conclusion} 
+
+%--------- Data availability statement ---------
+
+\vfill
+
+
+
+\sloppy
+
+\phantomsection
+\addchaptertocentry{Data availability statement}
+
+\noindent {\large\textbf{Data availability statement}}
+
+\vspace{1\baselineskip}
+
+\noindent The data supporting the findings of this study are publicly available under open-source licenses.
+
+\vspace{1\baselineskip}
+
+\noindent \textit{RangeCIR dataset.} Available at Zenodo:\\
+\url{https://doi.org/10.5281/zenodo.15226382}
+
+\noindent \textit{Ranging system firmware.} Available at GitHub:\\
+\url{https://github.com/andylvua/SFM10-DEV-TWR}
+
+\noindent \textit{Supplementary code and materials.} Include implementations, experimental data, and analysis scripts. Available at GitHub: \\
+\url{https://github.com/andylvua/BSc_Thesis_Materials}
+
+\vspace{1\baselineskip}
+
+\noindent For further inquiries, please contact the author at \url{ayaroshlvua@gmail.com}.
+
+
+
+\vfill
+
+
+
+\noindent
+\begin{tabularx}{\textwidth}{@{}lXr@{}}
+\textit{Author} & \makebox[\linewidth][l]{\rule{0.6\linewidth}{0.4pt}} & Andrii \textsc{Yaroshevych} \\[1em]
+\textit{Supervisor} & \makebox[\linewidth][l]{\rule{0.6\linewidth}{0.4pt}} & Oleg \textsc{Farenyuk} \\[1em]
+\textit{Co-Supervisor} & \makebox[\linewidth][l]{\rule{0.6\linewidth}{0.4pt}} & Oleg \textsc{Kapshii} \\
+\end{tabularx}
+
+%----------------------------------------------------------------------------------------
+%	THESIS CONTENT - APPENDICES
+%----------------------------------------------------------------------------------------
+
+\appendix
+\booltrue{chapteroneline}
+
+\include{Appendices/tracking_system}
 
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY
@@ -226,4 +290,4 @@ date=year,
 
 %----------------------------------------------------------------------------------------
 
-\end{document}  
+\end{document}
